@@ -1,1 +1,6 @@
-application.properties 내 정보를 본인에 맞게 수정하여 사용해야 합니다.
+# 연관관계와 예외 처리
+## API 명세서
+
+## SQL 쿼리
+
+## ERD 다이어그램
