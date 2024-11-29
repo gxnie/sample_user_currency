@@ -25,4 +25,6 @@ public class Currency extends BaseEntity{
         this.symbol = symbol;
     }
 
+    public Currency(){
+    }
 }

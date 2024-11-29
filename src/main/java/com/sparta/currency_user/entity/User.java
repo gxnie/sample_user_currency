@@ -19,4 +19,7 @@ public class User extends BaseEntity{
         this.email = email;
     }
 
+    public User(){
+
+    }
 }
