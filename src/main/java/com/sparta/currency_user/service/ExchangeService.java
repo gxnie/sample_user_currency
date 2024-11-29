@@ -1,10 +1,12 @@
 package com.sparta.currency_user.service;
 
 import com.sparta.currency_user.dto.ExchangeResponseDto;
+import com.sparta.currency_user.dto.ExchangeStatusDto;
 import com.sparta.currency_user.entity.Currency;
 import com.sparta.currency_user.entity.Exchange;
 import com.sparta.currency_user.entity.User;
 import com.sparta.currency_user.repository.ExchangeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +17,13 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class ExchangeService {
 
+
     final ExchangeRepository exchangeRepository;
+
     final UserService userService;
+
     final CurrencyService currencyService;
+
 
     // C -> 환전 요청 수행
     public ExchangeResponseDto save(Long userId, Long currencyId, BigDecimal amountInKrw){
@@ -50,16 +56,51 @@ public class ExchangeService {
                 exchange.getCurrency().getId(),       // 통화 id(통화 객체 고유 ID 반환)
                 exchange.getAmountInKrw(),            // 환전 전 금액 (원 기준)
                 exchange.getAmountAfterExchange(),    // 환전 후 금액 (대상 통화 기준)
-                exchange.getStatus()                  // 환전 상태 (normal or cancelled)
+                exchange.getStatus(),                 // 환전 상태 (normal or cancelled)
+                exchange.getCreatedAt(),              // 생성일자
+                exchange.getModifiedAt()              // 수정일자
         );
 
     }
 
     // R -> 고객 고유 식별자(User_id)로 특정 고객 환전 요청 조회
+    public ExchangeResponseDto findById(Long id){
+        return new ExchangeResponseDto(findExchangeById(id));
+    }
+
+    public Exchange findExchangeById(Long id){
+        // 특정 id에 해당하는 Exchange를 반환하는 코드
+        return exchangeRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당하는 정보가 없습니다."));
+    }
 
 
     // U -> 환전 요청 상태를 취소로 변경
+    public User updateExchangeById(Long id, ExchangeStatusDto exchangeStatusDto){
+        // 환전 요청 찾기
+        Exchange findExchange = this.findExchangeById(id);
+
+        // 상태 업데이트
+        findExchange.updateByDTO(exchangeStatusDto);
+
+        // 변경된 환전 요청(상태) 저장
+        exchangeRepository.save(findExchange);
+
+        // 해당 요청과 관련된 사용자 반환
+        // Exchange에서 User를 가져온 후 반환
+        return findExchange.getUser();
+    }
 
 
-    // D -> 고객 삭제 + 모든 환전 요청도 삭제
+    // D -> 고객 삭제(user Delete있음) + 모든 환전 요청도 삭제
+    @Transactional
+    public void deleteExchangeById(Long id) {
+        // 1. id로 환전 요청을 조회
+        // 만약 id에 해당하는 환전 요청이 없으면 예외가 발생 -> 트랜잭션 처음으로 돌아간다..?
+        // 환전 요청을 찾기 위해 호출
+        this.findExchangeById(id);
+
+        // 2. 환전 요청을 삭제
+        // exchangeRepository.deleteById(id) : 해당 id 환전 요청을 DB에서 삭제
+        exchangeRepository.deleteById(id);
+    }
 }
