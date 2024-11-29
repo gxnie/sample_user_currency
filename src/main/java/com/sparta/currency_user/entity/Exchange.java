@@ -1,18 +1,16 @@
 package com.sparta.currency_user.entity;
 
 
+import com.sparta.currency_user.dto.ExchangeStatusDto;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor
 public class Exchange extends BaseEntity {
 
     @Id
@@ -26,11 +24,11 @@ public class Exchange extends BaseEntity {
     private String status; // 상태(normal 또는 cancelled
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "currency_id", insertable = false, updatable = false)
+    @JoinColumn(name = "currency_id")
     private Currency currency;
     // currency_id를 연결해주기 위해 Currency 객체를 가져옴 -> 환율(exchange_rate)도 포함되어있음
 
@@ -42,6 +40,14 @@ public class Exchange extends BaseEntity {
         this.user = user;
         this.currency = currency;
     }
+
+
+
+    public Exchange(){
+
+    }
+
+
 
     // 환전 계산하기
     public Exchange(BigDecimal amountInKrw, BigDecimal exchangeRate, String status) {
@@ -65,5 +71,9 @@ public class Exchange extends BaseEntity {
 
     public void setCurrency(Currency currency){
         this.currency = currency;
+    }
+
+    public void updateByDTO(ExchangeStatusDto exchangeStatusDto) {
+        this.status = exchangeStatusDto.getStatus();
     }
 }
